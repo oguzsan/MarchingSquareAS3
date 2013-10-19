@@ -11,5 +11,4 @@ MarchingSquares
 
 CellData
 	rename NEXT_X -> RIGHT, NEXT_Y -> DOWN and so on
-	move constant lists (X_OFFSET_LIST, Y_OFFSET_LIST) to local to remove getter and setter calls
 

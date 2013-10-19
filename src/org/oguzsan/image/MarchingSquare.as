@@ -1,10 +1,26 @@
-/**
- * Created with IntelliJ IDEA.
- * User: Oguzsan
- * Date: 15.10.2013
- * Time: 03:58
- * To change this template use File | Settings | File Templates.
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013 Oğuz Sandıkçı http://oguzsan.org/
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * 	subject to the following conditions:
+ *
+ * 	The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package org.oguzsan.image
 {
 	import flash.geom.Point;
@@ -14,6 +30,8 @@ package org.oguzsan.image
 		//  MEMBERS
 		private var _width:int;
 		private var _height:int;
+		private var _neightbourXOffsetList:Vector.<int>;
+		private var _neightbourYOffsetList:Vector.<int>;
 		private var _cellListByRow:Vector.<MarchingSquareList>;
 		private var _closedIsoLineList:Vector.<MarchingSquareList>;
 		private var _openIsoLineList:Vector.<MarchingSquareList>;
@@ -90,6 +108,9 @@ package org.oguzsan.image
 
 		private function createIsoLines( inCloseLines:Boolean ):void
 		{
+			_neightbourXOffsetList = new <int>[1,0,-1,0];
+			_neightbourYOffsetList = new <int>[0,1,0,-1];
+
 			_closedIsoLineList = new Vector.<MarchingSquareList>();
 			_openIsoLineList = new Vector.<MarchingSquareList>();
 
@@ -100,12 +121,12 @@ package org.oguzsan.image
 				isoLine.addToStart( freeCell );
 
 				forwardIterationOnLine( isoLine );
-				if( !isoLine.isClosed() )
+				if( !isLineClosed(isoLine) )
 				{
 					backwardIterationOnLine( isoLine );
 				}
 
-				if( isoLine.isClosed() )
+				if( isLineClosed(isoLine) )
 				{
 					_closedIsoLineList.push( isoLine );
 				}
@@ -148,8 +169,8 @@ package org.oguzsan.image
 
 			do
 			{
-				var nextX:int = currentCell.nextX;
-				var nextY:int = currentCell.nextY;
+				var nextX:int = currentCell.x + _neightbourXOffsetList[currentCell.outputDirection];//currentCell.nextX;
+				var nextY:int = currentCell.y + _neightbourYOffsetList[currentCell.outputDirection];//currentCell.nextY;
 				if( nextX==-1 || nextY==-1 || nextX==_width || nextY==_height )
 				{
 					break;
@@ -189,8 +210,8 @@ package org.oguzsan.image
 
 			do
 			{
-				var prevX:int = currentCell.prevX;
-				var prevY:int = currentCell.prevY;
+				var prevX:int = currentCell.x + _neightbourXOffsetList[currentCell.inputDirection];//currentCell.prevX;
+				var prevY:int = currentCell.y + _neightbourYOffsetList[currentCell.inputDirection];//currentCell.prevY;
 				if( prevX==-1 || prevY==-1 || prevX==_width || prevY==_height )
 				{
 					break;
@@ -222,6 +243,18 @@ package org.oguzsan.image
 				}
 			}
 			while(currentCell);
+		}
+
+
+
+		public function isLineClosed( inLine:MarchingSquareList ):Boolean
+		{
+			var first:CellData = inLine.first;
+			var last:CellData = inLine.last;
+			return(
+				first.x+_neightbourXOffsetList[first.inputDirection]==last.x &&
+				first.y+_neightbourYOffsetList[first.inputDirection]==last.y &&
+				first.inputDirection==(last.outputDirection+2)%4 )
 		}
 
 		private function closeLines():void
@@ -334,9 +367,6 @@ class CellData
 	static public const NEXT_Y:int = 1;
 	static public const PREV_X:int = 2;
 	static public const PREV_Y:int = 3;
-	static private const X_OFFSET_LIST:Vector.<int> = new <int>[1,0,-1,0];
-	static private const Y_OFFSET_LIST:Vector.<int> = new <int>[0,1,0,-1];
-//	static private const DIRECTION_NAME_LIST:Vector.<String> = new <String>["NEXT_X","NEXT_Y","PREV_X","PREV_Y"];
 
 	//  MEMBERS
 	public var x:int;
@@ -346,13 +376,7 @@ class CellData
 	public var prevData:CellData;
 	public var nextData:CellData;
 
-	internal var ownerList:MarchingSquareList;
-
-	//  ACCESSORS
-	final public function get prevX():int {   return x + X_OFFSET_LIST[inputDirection];   }
-	final public function get prevY():int {   return y + Y_OFFSET_LIST[inputDirection];   }
-	final public function get nextX():int {   return x + X_OFFSET_LIST[outputDirection];  }
-	final public function get nextY():int {   return y + Y_OFFSET_LIST[outputDirection];  }
+//	internal var ownerList:MarchingSquareList;
 
 	//  CONSTRUCTOR
 	public function CellData( inX:int, inY:int, inInput:int, inOutput:int )
@@ -363,10 +387,6 @@ class CellData
 		outputDirection = inOutput;
 	}
 
-//	public function toString():String
-//	{
-//		return "[x:" + x + ",y:" + y + ",inputDir:" + DIRECTION_NAME_LIST[inputDirection] + ",outputDir:" + DIRECTION_NAME_LIST[outputDirection] + "]";
-//	}
 }
 
 class MarchingSquareList
@@ -390,7 +410,7 @@ class MarchingSquareList
 //		{
 //			log("ERROR:adding another list's cell");
 //		}
-		inCell.ownerList = this;
+//		inCell.ownerList = this;
 
 		if( count>0 )
 		{
@@ -411,7 +431,7 @@ class MarchingSquareList
 //		{
 //			log("adding another list's cell");
 //		}
-		inCell.ownerList = this;
+//		inCell.ownerList = this;
 
 		if( count>0 )
 		{
@@ -432,7 +452,7 @@ class MarchingSquareList
 //		{
 //			log("removeing another list's cell");
 //		}
-		inCell.ownerList = null;
+//		inCell.ownerList = null;
 
 		if( count>1 )
 		{
@@ -477,11 +497,6 @@ class MarchingSquareList
 		}
 
 		return list;
-	}
-
-	public function isClosed():Boolean
-	{
-		return( first.prevX==last.x && first.prevY==last.y && first.inputDirection==(last.outputDirection+2)%4 )
 	}
 
 	public function appendListToStart( inList:MarchingSquareList ):void
@@ -535,7 +550,7 @@ class EdgeData
 }
 
 
-function log( inMessage:String ):void
-{
-	trace(inMessage);
-}
+//function log( inMessage:String ):void
+//{
+//	trace(inMessage);
+//}
