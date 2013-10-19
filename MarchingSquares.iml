@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="Flex" version="4">
+  <component name="FlexBuildConfigurationManager" active="MarchingSquares">
+    <configurations>
+      <configuration name="MarchingSquares" pure-as="true" main-class="Main" output-file="MarchingSquares.swf" output-folder="$MODULE_DIR$/out">
+        <dependencies target-player="11.9">
+          <entries>
+            <entry library-id="37aa1bf4-985d-418f-8eda-5488cb020fad">
+              <dependency linkage="Merged" />
+            </entry>
+          </entries>
+          <sdk name="4.10.0" />
+        </dependencies>
+        <compiler-options />
+        <packaging-air-desktop />
+        <packaging-android />
+        <packaging-ios />
+      </configuration>
+    </configurations>
+    <compiler-options />
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/obj" />
+    </content>
+    <orderEntry type="jdk" jdkName="4.10.0" jdkType="Flex SDK Type (new)" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="Assets" level="project" />
+    <orderEntry type="module-library" exported="">
+      <library type="flex">
+        <properties id="37aa1bf4-985d-418f-8eda-5488cb020fad" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/Assets.swc!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+  </component>
+</module>
+

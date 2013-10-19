@@ -1,0 +1,15 @@
+
+Main
+	add checkbox for closeLine option
+	add support for local file loading
+	add support for downloading file with URL
+	add iso data for dynamic function with animated values
+
+MarchingSquares
+	optimize switch
+	dispose or reset for reuse
+
+CellData
+	rename NEXT_X -> RIGHT, NEXT_Y -> DOWN and so on
+	move constant lists (X_OFFSET_LIST, Y_OFFSET_LIST) to local to remove getter and setter calls
+
