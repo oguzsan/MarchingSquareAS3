@@ -26,7 +26,7 @@ package
 	import org.oguzsan.image.*;
 	import flash.display.BitmapData;
 
-	public class BitmapAlphaIsoData implements IIsoData
+	final public class BitmapAlphaIsoData implements IIsoData
 	{
 		//  MEMBERS
 		private var _bitmapData:BitmapData;

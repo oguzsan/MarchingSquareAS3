@@ -27,11 +27,14 @@ package org.oguzsan.image
 
 	public class MarchingSquare
 	{
+		//  CONSTANTS
+		//  Offset values to find position of following cell using input and output directions
+		private const NEIGHBOUR_X_OFFSET_LIST:Vector.<int> = new <int>[1,0,-1,0];
+		private const NEIGHBOUR_Y_OFFSET_LIST:Vector.<int> = new <int>[0,1,0,-1];
+
 		//  MEMBERS
 		private var _width:int;
 		private var _height:int;
-		private var _neightbourXOffsetList:Vector.<int>;
-		private var _neightbourYOffsetList:Vector.<int>;
 		private var _cellListByRow:Vector.<MarchingSquareList>;
 		private var _closedIsoLineList:Vector.<MarchingSquareList>;
 		private var _openIsoLineList:Vector.<MarchingSquareList>;
@@ -43,13 +46,31 @@ package org.oguzsan.image
 		public function get openIsoLineCount():int  {   return _openIsoLineList.length;     }
 
 		//  CONSTRUCTOR
-		public function MarchingSquare( inIsoData:IIsoData, inCloseLines:Boolean )
+		public function MarchingSquare( )
 		{
-			createMarchingSquareCells( inIsoData );
-			createIsoLines( inCloseLines );
 		}
 
 		//  METHODS
+		public function execute( inIsoData:IIsoData, inCloseLines:Boolean ):void
+		{
+			var time1:Number = (new Date()).getTime();
+			createMarchingSquareCells( inIsoData );
+
+			var time2:Number = (new Date()).getTime();
+			createIsoLines( );
+
+			var time3:Number = (new Date()).getTime();
+			if( inCloseLines )
+			{
+				closeLines();
+			}
+			var time4:Number = (new Date()).getTime();
+
+			trace("createCellsDuration:"+(time2-time1));
+			trace("createLinesDuration:"+(time3-time2));
+			trace("closeLinesDuration:"+(time4-time3));
+		}
+
 		public function createClosedIsoLinePoints( inIsoLineIndex:int ):Vector.<Point>
 		{
 			return _closedIsoLineList[inIsoLineIndex].createPointList();
@@ -62,26 +83,49 @@ package org.oguzsan.image
 
 		private function createMarchingSquareCells( inIsoData:IIsoData ):void
 		{
+			//  Get dimensions
 			_width = inIsoData.width;
 			_height = inIsoData.height;
-			_cellListByRow = new Vector.<MarchingSquareList>(_height,true);
+
+			const w:int = _width;
+			const h:int = _height;
+
+			//  Create cell list for every row
+			_cellListByRow = new Vector.<MarchingSquareList>(h,true);
+
+			var prevLineSamples:Vector.<int> = new Vector.<int>(w,true);
+			var currLineSamples:Vector.<int> = new Vector.<int>(w,true);
+
+			//  Algorithm uses four samples to calculate value, so we skip first row and first column
+			for( var x:int= 0; x<w; x++ )
+			{
+				prevLineSamples[x] = inIsoData.getValueAt( x, 0 );
+			}
 
 			_cellListByRow[0] = new MarchingSquareList();
-			for( var y:int=1 ; y<_height ; y++ )
+
+			for( var y:int=1 ; y<h ; y++ )
 			{
 				var lineList:MarchingSquareList = new MarchingSquareList();
 
-				for( var x:int= 1; x<_width; x++ )
+				currLineSamples[0] = inIsoData.getValueAt( 0, y );
+				for( x=1; x<w; x++ )
 				{
-					var value:int = 0;
-					if(inIsoData.getValueAt(x-1, y-1)>0)    value += 1;
-					if(inIsoData.getValueAt(x,   y-1)>0)    value += 2;
-					if(inIsoData.getValueAt(x,   y  )>0)    value += 4;
-					if(inIsoData.getValueAt(x-1, y  )>0)    value += 8;
+					currLineSamples[x] = inIsoData.getValueAt( x, y );
 
-					switch(value)
+					//  Get value
+					var value:int = 0;
+					if( prevLineSamples[int(x-1)]>0 )       value += 1;     //      [1]--[2]
+					if( prevLineSamples[x       ]>0 )       value += 2;     //      |      |
+					if( currLineSamples[x       ]>0 )       value += 4;     //      |      |
+					if( currLineSamples[int(x-1)]>0 )       value += 8;     //      [8]--[4]
+
+					//  Create cells
+/*					switch(value)
 					{
-						case 0:     break;
+						case 0:
+						case 15:    continue;	break;
+
 						case 1:     lineList.addToEnd( new CellData( x, y, CellData.PREV_X, CellData.PREV_Y ) ); break;
 						case 2:     lineList.addToEnd( new CellData( x, y, CellData.PREV_Y, CellData.NEXT_X ) ); break;
 						case 3:     lineList.addToEnd( new CellData( x, y, CellData.PREV_X, CellData.NEXT_X ) ); break;
@@ -98,54 +142,102 @@ package org.oguzsan.image
 						case 12:    lineList.addToEnd( new CellData( x, y, CellData.NEXT_X, CellData.PREV_X ) ); break;
 						case 13:    lineList.addToEnd( new CellData( x, y, CellData.NEXT_X, CellData.PREV_Y ) ); break;
 						case 14:    lineList.addToEnd( new CellData( x, y, CellData.PREV_Y, CellData.PREV_X ) ); break;
-						case 15:    break;
-					}
+					}*/
+
+/*					switch(value)
+					{
+						case 0:
+						case 15:    continue;	break;
+
+						case 1:     lineList.addToEnd( new CellData( x, y, 2, 3 ) ); break;
+						case 2:     lineList.addToEnd( new CellData( x, y, 3, 0 ) ); break;
+						case 3:     lineList.addToEnd( new CellData( x, y, 2, 0 ) ); break;
+						case 4:     lineList.addToEnd( new CellData( x, y, 0, 1 ) ); break;
+						case 5:     lineList.addToEnd( new CellData( x, y, 2, 1 ) );
+									lineList.addToEnd( new CellData( x, y, 0, 3 ) ); break;
+						case 6:     lineList.addToEnd( new CellData( x, y, 3, 1 ) ); break;
+						case 7:     lineList.addToEnd( new CellData( x, y, 2, 1 ) ); break;
+						case 8:     lineList.addToEnd( new CellData( x, y, 1, 2 ) ); break;
+						case 9:     lineList.addToEnd( new CellData( x, y, 1, 3 ) ); break;
+						case 10:    lineList.addToEnd( new CellData( x, y, 1, 0 ) );
+									lineList.addToEnd( new CellData( x, y, 3, 2 ) ); break;
+						case 11:    lineList.addToEnd( new CellData( x, y, 1, 0 ) ); break;
+						case 12:    lineList.addToEnd( new CellData( x, y, 0, 2 ) ); break;
+						case 13:    lineList.addToEnd( new CellData( x, y, 0, 3 ) ); break;
+						case 14:    lineList.addToEnd( new CellData( x, y, 3, 2 ) ); break;
+					}*/
+					if( value==0 )  continue;
+					if( value==15)  continue;
+
+					if( value==1 ){ lineList.addToEnd( new CellData( x, y, 2, 3 ) );    continue;}
+					if( value==2 ){ lineList.addToEnd( new CellData( x, y, 3, 0 ) );    continue;}
+					if( value==3 ){ lineList.addToEnd( new CellData( x, y, 2, 0 ) );    continue;}
+					if( value==4 ){ lineList.addToEnd( new CellData( x, y, 0, 1 ) );    continue;}
+					if( value==5 ){ lineList.addToEnd( new CellData( x, y, 2, 1 ) );
+									lineList.addToEnd( new CellData( x, y, 0, 3 ) );    continue;}
+					if( value==6 ){ lineList.addToEnd( new CellData( x, y, 3, 1 ) );    continue;}
+					if( value==7 ){ lineList.addToEnd( new CellData( x, y, 2, 1 ) );    continue;}
+					if( value==8 ){ lineList.addToEnd( new CellData( x, y, 1, 2 ) );    continue;}
+					if( value==9 ){ lineList.addToEnd( new CellData( x, y, 1, 3 ) );    continue;}
+					if( value==10){ lineList.addToEnd( new CellData( x, y, 1, 0 ) );
+									lineList.addToEnd( new CellData( x, y, 3, 2 ) );    continue;}
+					if( value==11){ lineList.addToEnd( new CellData( x, y, 1, 0 ) );    continue;}
+					if( value==12){ lineList.addToEnd( new CellData( x, y, 0, 2 ) );    continue;}
+					if( value==13){ lineList.addToEnd( new CellData( x, y, 0, 3 ) );    continue;}
+					if( value==14)  lineList.addToEnd( new CellData( x, y, 3, 2 ) );
 				}
+
+				var tempList:Vector.<int> = prevLineSamples;
+				prevLineSamples = currLineSamples;
+				currLineSamples = tempList;
+
 				_cellListByRow[y] = lineList;
 			}
 
 		}
 
-		private function createIsoLines( inCloseLines:Boolean ):void
+		private function createIsoLines( ):void
 		{
-			_neightbourXOffsetList = new <int>[1,0,-1,0];
-			_neightbourYOffsetList = new <int>[0,1,0,-1];
-
 			_closedIsoLineList = new Vector.<MarchingSquareList>();
 			_openIsoLineList = new Vector.<MarchingSquareList>();
 
+			//  Get first free cell(not on a line yet)
 			var freeCell:CellData = getFreeCell();
 			while( freeCell )
 			{
+				//  Start from this cell
 				var isoLine:MarchingSquareList = new MarchingSquareList();
 				isoLine.addToStart( freeCell );
 
+				//  Iterate through neighbours using output direction (CounterClockWise)
 				forwardIterationOnLine( isoLine );
+
 				if( !isLineClosed(isoLine) )
 				{
+					//  Iterate through neighbours using input direction (ClockWise)
 					backwardIterationOnLine( isoLine );
 				}
 
+				//  If line is closed, add to closed line list
 				if( isLineClosed(isoLine) )
 				{
 					_closedIsoLineList.push( isoLine );
 				}
 				else
 				{
+					//  Add one cell to extend ending to edges
 					isoLine.addToStart( createPaddingCell( isoLine.first  ) );
-					isoLine.addToEnd(   createPaddingCell( isoLine.last   ) );
+					isoLine.addToEnd( createPaddingCell( isoLine.last ) );
+
+					//  Add to open line list
 					_openIsoLineList.push( isoLine );
 				}
 
+				//  Continue with another free cell
 				freeCell = getFreeCell();
 			}
 
 			_cellListByRow = null;
-
-			if( inCloseLines )
-			{
-				closeLines();
-			}
 		}
 
 		private function getFreeCell():CellData
@@ -169,8 +261,8 @@ package org.oguzsan.image
 
 			do
 			{
-				var nextX:int = currentCell.x + _neightbourXOffsetList[currentCell.outputDirection];//currentCell.nextX;
-				var nextY:int = currentCell.y + _neightbourYOffsetList[currentCell.outputDirection];//currentCell.nextY;
+				var nextX:int = currentCell.x + NEIGHBOUR_X_OFFSET_LIST[currentCell.outputDirection];
+				var nextY:int = currentCell.y + NEIGHBOUR_Y_OFFSET_LIST[currentCell.outputDirection];
 				if( nextX==-1 || nextY==-1 || nextX==_width || nextY==_height )
 				{
 					break;
@@ -210,8 +302,8 @@ package org.oguzsan.image
 
 			do
 			{
-				var prevX:int = currentCell.x + _neightbourXOffsetList[currentCell.inputDirection];//currentCell.prevX;
-				var prevY:int = currentCell.y + _neightbourYOffsetList[currentCell.inputDirection];//currentCell.prevY;
+				var prevX:int = currentCell.x + NEIGHBOUR_X_OFFSET_LIST[currentCell.inputDirection];//currentCell.prevX;
+				var prevY:int = currentCell.y + NEIGHBOUR_Y_OFFSET_LIST[currentCell.inputDirection];//currentCell.prevY;
 				if( prevX==-1 || prevY==-1 || prevX==_width || prevY==_height )
 				{
 					break;
@@ -245,15 +337,13 @@ package org.oguzsan.image
 			while(currentCell);
 		}
 
-
-
-		public function isLineClosed( inLine:MarchingSquareList ):Boolean
+		private function isLineClosed( inLine:MarchingSquareList ):Boolean
 		{
 			var first:CellData = inLine.first;
 			var last:CellData = inLine.last;
 			return(
-				first.x+_neightbourXOffsetList[first.inputDirection]==last.x &&
-				first.y+_neightbourYOffsetList[first.inputDirection]==last.y &&
+				first.x+NEIGHBOUR_X_OFFSET_LIST[first.inputDirection]==last.x &&
+				first.y+NEIGHBOUR_Y_OFFSET_LIST[first.inputDirection]==last.y &&
 				first.inputDirection==(last.outputDirection+2)%4 )
 		}
 
@@ -290,24 +380,27 @@ package org.oguzsan.image
 					for( var i:int=0 ; i<_openIsoLineList.length ; i++ )
 					{
 						var newLine:MarchingSquareList = _openIsoLineList[i];
+						//  If new line end point is on same edge
 						if( currentEdge.isPointOnEdge( newLine.last.x, newLine.last.y ) )
 						{
 							var distance:int =  (newLine.last.x-currentLine.first.x)*currentEdge.xDirection+
 												(newLine.last.y-currentLine.first.y)*currentEdge.yDirection;
 
+							//  Distance on edge is less than previous ones
 							if( distance>0 && distance<newLineDistance )
 							{
+								//  Get line to match endings
 								newLineNo = i;
 								newLineDistance = distance;
 							}
 						}
 					}
 
-					//  found closing line
+					//  If matched a closing line
 					if( newLineNo!=-1 )
 					{
-						//  self closing
-						if(newLineNo==0)
+						//  Is self closing
+						if( newLineNo==0 )
 						{
 							_closedIsoLineList.push( _openIsoLineList.shift() );
 							currentLine = null;
@@ -319,11 +412,13 @@ package org.oguzsan.image
 							_openIsoLineList.splice( newLineNo, 1 );
 						}
 					}
+					//  No closing line found
 					else
 					{
-						//  No closing poly, move to next edge
+						//  Add end point of edge as a cell to line
 						_openIsoLineList[0].addToStart( new CellData( currentEdge.xEnd,currentEdge.yEnd,0,0 ) );
 
+						//  Continue to next edge
 						currentEdgeId = (currentEdgeId+1)%4;
 						currentEdge = edgeList[currentEdgeId];
 					}

@@ -60,7 +60,7 @@ package
 
 		private const CLOSED_ISO_LINE_COLOR:int = 0x00FF00;
 		private const OPEN_ISO_LINE_COLOR:int = 0xFF00FF;
-		private const POLYGON_LINE_THICKNESS:int = 3;
+		private const ISO_LINE_THICKNESS:int = 3;
 
 		//  MEMBERS
 		private var _bgPatternImage:BitmapData;
@@ -68,7 +68,7 @@ package
 		private var _imageContainer:Sprite;
 		private var _imageBgDisplay:Sprite;
 		private var _imageDisplay:Bitmap;
-		private var _polygonDisplay:Sprite;
+		private var _isoLinesDisplay:Sprite;
 
 		private var _thumbnailContainer:Sprite;
 		private var _thumbnailDictionary:Dictionary;
@@ -156,8 +156,8 @@ package
 			_imageDisplay = new	Bitmap();
 			_imageContainer.addChild(_imageDisplay);
 
-			_polygonDisplay = new Sprite();
-			_imageContainer.addChild(_polygonDisplay);
+			_isoLinesDisplay = new Sprite();
+			_imageContainer.addChild(_isoLinesDisplay);
 		}
 
 		private function imageContainer_resize():void
@@ -232,7 +232,8 @@ package
 			_closeLines = false;
 
 			var isoData:BitmapAlphaIsoData = new BitmapAlphaIsoData( image );
-			var marchingSquare:MarchingSquare = new MarchingSquare( isoData, _closeLines );
+			var marchingSquare:MarchingSquare = new MarchingSquare();
+			marchingSquare.execute( isoData, _closeLines );
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -247,18 +248,18 @@ package
 				"\ncalculation time:"+(afterTime-beforeTime);
 
 
-			_polygonDisplay.graphics.clear();
+			_isoLinesDisplay.graphics.clear();
 			for( var p:int=0 ; p<marchingSquare.closedIsoLineCount; p++ )
 			{
 				var pointList:Vector.<Point> = marchingSquare.createClosedIsoLinePoints( p );
 
-				drawPolygon( _polygonDisplay.graphics, pointList, POLYGON_LINE_THICKNESS, CLOSED_ISO_LINE_COLOR, true );
+				drawPolygon( _isoLinesDisplay.graphics, pointList, ISO_LINE_THICKNESS, CLOSED_ISO_LINE_COLOR, true );
 			}
 			for( p=0 ; p<marchingSquare.openIsoLineCount; p++ )
 			{
 				pointList = marchingSquare.createOpenIsoLinePoints( p );
 
-				drawPolygon( _polygonDisplay.graphics, pointList, POLYGON_LINE_THICKNESS, OPEN_ISO_LINE_COLOR, false );
+				drawPolygon( _isoLinesDisplay.graphics, pointList, ISO_LINE_THICKNESS, OPEN_ISO_LINE_COLOR, false );
 			}
 
 			imageContainer_resize();
@@ -290,44 +291,6 @@ package
 
 			sprite.graphics.beginFill( IMAGE_DRAW_COLOR );
 			sprite.graphics.drawCircle( 50, 50, 40 );
-			sprite.graphics.endFill();
-
-			var matrix:Matrix = new Matrix();
-			matrix.scale(IMAGE_WIDTH/100,IMAGE_HEIGHT/100);
-
-			var bitmapData:BitmapData = new BitmapData( IMAGE_WIDTH, IMAGE_HEIGHT, true, 0 );
-			bitmapData.draw( sprite, matrix );
-
-			return bitmapData;
-		}
-
-		private function testImage7( ):BitmapData
-		{
-			var sprite:Sprite = new Sprite();
-
-			for( var i:int=0; i<12; i++ )
-			{
-				sprite.graphics.beginFill( IMAGE_DRAW_COLOR );
-				sprite.graphics.drawEllipse( 10+Math.random()*80, 10+Math.random()*80, 10+Math.random()*30, 10+Math.random()*30 );
-				sprite.graphics.endFill();
-			}
-
-			var matrix:Matrix = new Matrix();
-			matrix.scale(IMAGE_WIDTH/100,IMAGE_HEIGHT/100);
-
-			var bitmapData:BitmapData = new BitmapData( IMAGE_WIDTH, IMAGE_WIDTH, true, 0 );
-			bitmapData.draw( sprite, matrix );
-
-			return bitmapData;
-		}
-
-		private function testImage5( ):BitmapData
-		{
-			var sprite:Sprite = new Sprite();
-
-			sprite.graphics.beginFill( IMAGE_DRAW_COLOR );
-			sprite.graphics.drawCircle( 50, 50, 40 );
-			sprite.graphics.drawCircle( 50, 50, 20 );
 			sprite.graphics.endFill();
 
 			var matrix:Matrix = new Matrix();
@@ -395,6 +358,24 @@ package
 			return bitmapData;
 		}
 
+		private function testImage5( ):BitmapData
+		{
+			var sprite:Sprite = new Sprite();
+
+			sprite.graphics.beginFill( IMAGE_DRAW_COLOR );
+			sprite.graphics.drawCircle( 50, 50, 40 );
+			sprite.graphics.drawCircle( 50, 50, 20 );
+			sprite.graphics.endFill();
+
+			var matrix:Matrix = new Matrix();
+			matrix.scale(IMAGE_WIDTH/100,IMAGE_HEIGHT/100);
+
+			var bitmapData:BitmapData = new BitmapData( IMAGE_WIDTH, IMAGE_HEIGHT, true, 0 );
+			bitmapData.draw( sprite, matrix );
+
+			return bitmapData;
+		}
+
 		private function testImage6( ):BitmapData
 		{
 			var sprite:Sprite = new Sprite();
@@ -408,6 +389,26 @@ package
 			matrix.scale(IMAGE_WIDTH/100,IMAGE_HEIGHT/100);
 
 			var bitmapData:BitmapData = new BitmapData( IMAGE_WIDTH, IMAGE_HEIGHT, true, 0 );
+			bitmapData.draw( sprite, matrix );
+
+			return bitmapData;
+		}
+
+		private function testImage7( ):BitmapData
+		{
+			var sprite:Sprite = new Sprite();
+
+			for( var i:int=0; i<12; i++ )
+			{
+				sprite.graphics.beginFill( IMAGE_DRAW_COLOR );
+				sprite.graphics.drawEllipse( 10+Math.random()*80, 10+Math.random()*80, 10+Math.random()*30, 10+Math.random()*30 );
+				sprite.graphics.endFill();
+			}
+
+			var matrix:Matrix = new Matrix();
+			matrix.scale(IMAGE_WIDTH/100,IMAGE_HEIGHT/100);
+
+			var bitmapData:BitmapData = new BitmapData( IMAGE_WIDTH, IMAGE_WIDTH, true, 0 );
 			bitmapData.draw( sprite, matrix );
 
 			return bitmapData;
